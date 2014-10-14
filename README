@@ -1,0 +1,5 @@
+This is a script that downloads all photos from
+<https://stallman.org/photos/>. If it is run twice,
+only new, or not yet downloaded, photos will be
+downloaded.
+
