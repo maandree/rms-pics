@@ -1,0 +1,83 @@
+#!/bin/bash
+
+# Copyright © 2014  Mattias Andrée <maandree@member.fsf.org>
+# 
+# Copying and distribution of this file, with or without modification,
+# are permitted in any medium without royalty provided the copyright
+# notice and this notice are preserved.  This file is offered as-is,
+# without any warranty.
+
+usage ()
+{
+cat <<EOF
+Usage: $0 <download-directory>
+
+When selecting the directory, be aware that over
+19 GB will be downloaded.
+
+Downloaded photos are licensed under
+Creative Commons Noderivs license version 3.0
+(http://creativecommons.org/licenses/by-nd/3.0)
+can can be redistributed under any later version
+of the license.
+
+
+Copyright © 2014  Mattias Andrée <maandree@member.fsf.org>
+
+Copying and distribution of this file, with or without modification,
+are permitted in any medium without royalty provided the copyright
+notice and this notice are preserved.  This file is offered as-is,
+without any warranty.
+EOF
+}
+
+set -e
+
+if [ ! $# = 1 ] || [ "${1::1}" = '-' ]; then
+    usage
+    exit 0
+fi
+
+mkdir -p "${1}"
+cd "${1}"
+
+url="https://stallman.org/photos/index2.html"
+echo $'\e[01;34m'"$url"$'\e[00m'
+pics="$(wget "$url" -O -)"
+pics="$(echo "$pics" | grep -Po 'alt="[^"]+"' || true)" #'
+pics="$(echo "$pics" | sed -e 's:^alt="::g' -e 's:"$::g')"
+
+while read -r pic; do
+    if [ ! -f "$pic" ]; then
+	url="https://stallman.org/photos/$pic"
+	echo $'\e[01;34m  '"$url"$'\e[00m'
+	wget "$url" -O "$pic"
+    fi
+done <<< "$pics"
+
+url="https://stallman.org/photos/index.html"
+echo $'\e[01;34m'"$url"$'\e[00m'
+dirs="$(wget https://stallman.org/photos/index.html -O -)"
+dirs="$(echo "$dirs" | grep -Po 'href="[^"]+"')" #'
+dirs="$(echo "$dirs" | sed -e 's:^href="./::g' -e 's:/index.html"$::g')"
+dirs="$(echo "$dirs" | grep -v '^href=' | grep -v '.html')"
+
+while read -r dir; do
+    url="https://stallman.org/photos/$dir/index.html"
+    echo $'\e[01;34m  '"$url"$'\e[00m'
+    pics="$(wget "$url" -O -)"
+    pics="$(echo "$pics" | grep -Po 'alt="[^"]+"' || true)" #'
+    pics="$(echo "$pics" | sed -e 's:^alt="::g' -e 's:"$::g')"
+    
+    if [ -n "$(echo $pics)" ]; then
+	mkdir -p "$dir"
+	while read -r pic; do
+	    if [ ! -f "$dir/$pic" ]; then
+		url="https://stallman.org/photos/$dir/$pic"
+		echo $'\e[01;34m    '"$url"$'\e[00m'
+		wget "$url" -O "$dir/$pic"
+	    fi
+	done <<< "$pics"
+    fi
+done <<< "$dirs"
+
