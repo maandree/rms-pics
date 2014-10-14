@@ -1,0 +1,14 @@
+RUNTIME DEPENDENCIES:
+
+	bash
+	coreutils
+	wget
+	grep
+	sed
+
+
+INSTALL DEPENDENCIES:
+
+	make
+	coreutils
+
