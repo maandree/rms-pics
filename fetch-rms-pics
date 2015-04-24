@@ -75,7 +75,16 @@ while read -r dir; do
 	    if [ ! -f "$dir/$pic" ]; then
 		url="https://stallman.org/photos/$dir/$pic"
 		echo $'\e[01;34m    '"$url"$'\e[00m'
-		wget "$url" -O "$dir/$pic"
+		wget "$url" -O "$dir/$pic" || (
+		    rm "$dir/$pic" || true
+		    url="https://stallman.org/photos/$dir/mid/mid_$pic"
+		    echo $'\e[01;34m    '"$url"$'\e[00m'
+		    wget "$url" -O "$dir/mid_$pic" || (rm "$dir/mid_$pic" && false)
+		)
+		if [ -f "$dir/$pic" ] && [ -f "$dir/mid_$pic" ]; then
+		    echo $'\e[01;31m    '"mv \"$dir/mid_$pic\" \"/tmp/mid_$pic\" "$'\e[00m'
+		    mv -- "$dir/mid_$pic" "/tmp/mid_$pic"
+		fi
 	    fi
 	done <<< "$pics"
     fi
